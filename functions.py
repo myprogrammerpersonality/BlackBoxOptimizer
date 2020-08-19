@@ -246,11 +246,11 @@ def result_preprocess(day, desired_cols, ranges=(20, 24)):
 
     # m number pipeline
     data_m = results[desired_cols].iloc[:ranges[0],:]
-    label_m = results['yield'].iloc[:ranges[0],]
+    label_m = results[['yield']].iloc[:ranges[0],:]
 
     # reference, control and specials
     data_specials = results[desired_cols].iloc[ranges[0]:ranges[1],:]
-    label_specials = results['yield'].iloc[ranges[0]:ranges[1],]
+    label_specials = results[['yield']].iloc[ranges[0]:ranges[1],:]
     
     return data_m, label_m, data_specials, label_specials
 
