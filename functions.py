@@ -268,7 +268,7 @@ def process_limits(concentrations_limits):
     changing = []
     for key, value in concentrations_limits.items():
         if value[0] == value[1]:
-            fixed[key] = value[0]
+            fixed[key] = [value[0]]
         else:
             changing.append(key)
 
