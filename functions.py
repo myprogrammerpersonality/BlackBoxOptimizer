@@ -239,21 +239,20 @@ def bayesian_optimization(regressors_list,
     
     return chosen_combinations
 
-# result preprocess
-
+# result  preprocess
 def result_preprocess(day, desired_cols, ranges=(20, 24)):
     
     results = pd.read_csv('Day_{}/Results_{}.csv'.format(day, day))
 
-    # 20 number pipeline
-    data_20 = results[desired_cols].iloc[:ranges[0],:-1]
-    label_20 = results[desired_cols].iloc[:ranges[0],-1:]
+    # m number pipeline
+    data_m = results[desired_cols].iloc[:ranges[0],:]
+    label_m = results['yield'].iloc[:ranges[0],]
 
-    # ref_excel, jove, ours , control
-    data_specials = results[desired_cols].iloc[ranges[0]:ranges[1],:-1]
-    label_specials = results[desired_cols].iloc[ranges[0]:ranges[1],-1:]
+    # reference, control and specials
+    data_specials = results[desired_cols].iloc[ranges[0]:ranges[1],:]
+    label_specials = results['yield'].iloc[ranges[0]:ranges[1],]
     
-    return data_20, label_20, data_specials, label_specials
+    return data_m, label_m, data_specials, label_specials
 
 
 # find the first uncomplete day
