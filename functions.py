@@ -62,17 +62,16 @@ def random_combination_generator(concentrations_limits, number_of_combination=10
         data = pd.DataFrame(np.array(combinations), columns=concentrations_limits.keys())
         data.to_csv('Random_Combination_1.csv',index=False)
         
-        # making csv file
+    # making dataframe
     if return_df:
         data = pd.DataFrame(np.array(combinations), columns=concentrations_limits.keys())
         return data
 
     return np.array(combinations)
 
-
 # transform concentration DataFrame to volume (nanolitre) DataFrame
-def concentration_to_volume(concentrations, concentrations_limits, reaction_mixture_vol_nl=10000, output_unit = 'nl',
-                            round_3=True, add_lysate=False, lysate_ratio=0.33,  make_csv=False):
+def concentration_to_volume(concentrations, concentrations_limits, reaction_mixture_vol_nl=10000,
+                            fixed_parts = {'Lysate':0.33, 'Saline':0.1}, round_3=True):
     ## concentrations is a Pandas DataFrame in this format:
     #   {'name of metabolite': concentration}
     ## concentrations_limits is a Dict in this format:
@@ -93,22 +92,17 @@ def concentration_to_volume(concentrations, concentrations_limits, reaction_mixt
     ### data['total_except_water'] = data.sum(axis=1)
     #
     
-    # add lysate
-    if add_lysate:
-        data['lysate'] = reaction_mixture_vol_nl * lysate_ratio
+    # add fix parts
+    if fixed_parts:
+        for key, value in fixed_parts.items():
+            data[key] = reaction_mixture_vol_nl * value
     
     # add water to reach the reaction_mixture_vol_nl
-    ### data['water'] = reaction_mixture_vol_nl - data['total_except_water']
     data['water'] = reaction_mixture_vol_nl - data.sum(axis=1)
     
     # for low stock concentration that is not possible to make, raise an error
     # stock conc should set in a way that dont raise this error to avoid further debugging
-    if not all(data['water']>0): raise ValueError
-    
-    # making csv file
-    if make_csv:
-        df = pd.DataFrame(np.array(data), columns=data.columns)
-        df.to_csv('Volumes_3.csv',index=False)
+    if not all(data['water']>0): raise Exception("Oops, too concentrated combination!")
         
     # return vol in nl
     return data
@@ -243,3 +237,38 @@ def bayesian_optimization(regressors_list,
     chosen_combinations = chosen_combinations[final_order]
     
     return chosen_combinations
+
+# result preprocess
+
+def result_preprocess(day, desired_cols, ranges=(20, 24)):
+    
+    results = pd.read_csv('Day_{}/Results_{}.csv'.format(day, day))
+
+    # 20 number pipeline
+    data_20 = results[desired_cols].iloc[:ranges[0],:-1]
+    label_20 = results[desired_cols].iloc[:ranges[0],-1:]
+
+    # ref_excel, jove, ours , control
+    data_specials = results[desired_cols].iloc[ranges[0]:ranges[1],:-1]
+    label_specials = results[desired_cols].iloc[ranges[0]:ranges[1],-1:]
+    
+    return data_20, label_20, data_specials, label_specials
+
+
+# find the first uncomplete day
+def day_finder(file, file_format='csv'):
+    for i in range(1, 12):
+        if not os.path.isfile('Day_{}/{}_{}.{}'.format(i, file, i, file_format)):
+            return i
+    return 0
+
+def process_limits(concentrations_limits):
+    fixed = {}
+    changing = []
+    for key, value in concentrations_limits.items():
+        if value[0] == value[1]:
+            fixed[key] = value[0]
+        else:
+            changing.append(key)
+
+    return fixed, changing, list(concentrations_limits.keys())
