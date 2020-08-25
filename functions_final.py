@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
+from itertools import product
 
 # calc possible conc
 def allowed_output(conc_limit, reaction_vol_nl=20000, drop_size_nl=100, verbose=0):
