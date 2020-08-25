@@ -241,6 +241,104 @@ def random_combination_generator(concentrations_limits, number_of_combination=10
 
     return np.array(combinations)
 
+# define random combination generator function, manual
+def random_combination_generator_conc_value(concentrations_values, number_of_combination=100, reaction_vol_nl=10000,
+                                 max_nl=None, drop_size_nl=25, check_repeat=True, rounded=2, verbose=0, make_csv=False,
+                                 return_df=False):
+    #  drop size safe
+    #  water <0 safe
+    #  concentrations_limits is a Dict in this format:
+    #  {'name of metabolite': ([values], stock)}
+    #  or {'name of metabolite': ([values], stock, (alternative 1, alternative 2, alternative 3))}
+    #  *** your concentrations_limits should have minimum number of possible combination ***
+
+    #  make this list for checking max vol
+    stocks_vol = [reaction_vol_nl / i[1] for i in concentrations_values.values()]
+
+    # generating random combinations
+    combinations = []
+    data_point = 0
+    while data_point < number_of_combination:
+        input_data = []
+        # verbosity
+        if (data_point % 10000 == 0) and verbose:
+            print(data_point)
+
+        # generation of random input
+        for key, value in concentrations_values.items():
+            if len(value) == 2:
+                # these two line make output concentrations, safe for your minimum droplet size
+                input_data.append(np.random.choice(value[0]))
+            elif len(value) == 3:
+                # for those metabolite that has alternatives
+                num_alternative = len(value[2])
+                choice = np.random.randint(0, num_alternative)
+                choice_list = [0 for i in range(num_alternative)]
+                choice_list[choice] = 1
+
+                # these two line make output concentrations, safe for your minimum droplet size
+                input_data.append(np.random.choice(value[0]))
+                input_data += choice_list
+
+
+        # Checks
+        index_conc = []
+        num_all = 0
+        for value in concentrations_values.values():
+            if len(value)==2:
+                index_conc.append(num_all)
+                num_all += 1
+            else:
+                index_conc.append(num_all)
+                num_all += (len(value[2]) + 1)
+
+        input_data_check = [input_data[i] for i in index_conc]
+        if check_repeat:
+            if input_data not in combinations:
+                if max_nl:
+                    if sum([i * j for i, j in zip(input_data_check, stocks_vol)]) <= max_nl:
+                        # appending to other combination
+                        combinations.append(input_data)
+                        data_point += 1
+                    else:
+                        pass
+            else:
+                pass
+        else:
+            if max_nl:
+                if sum([i * j for i, j in zip(input_data_check, stocks_vol)]) <= max_nl:
+                    # appending to other combination
+                    combinations.append(input_data)
+                    data_point += 1
+                else:
+                    pass
+            else:
+                # appending to other combination
+                combinations.append(input_data)
+                data_point += 1
+
+    # make column name:
+    columns_name = []
+    for key, value in concentrations_values.items():
+        if len(value) == 2:
+            columns_name.append(key)
+        elif len(value) == 3:
+            columns_name.append(key)
+            alternative_name = ['{}_{}'.format(key, i) for i in value[2]]
+            columns_name += alternative_name
+
+    # making csv file
+    if make_csv:
+        data = pd.DataFrame(np.array(combinations), columns=columns_name)
+        data.to_csv('Random_Combination_1.csv', index=False)
+
+    # making dataframe
+    if return_df:
+        data = pd.DataFrame(np.array(combinations), columns=columns_name)
+        return data
+
+    return np.array(combinations)
+
 
 def process_limits(concentrations_limits):
     fixed = {}
