@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import os
 
-
 # calc possible conc
 def allowed_output(conc_limit, reaction_vol_nl=20000, drop_size_nl=100, verbose=0):
     # droplet size along with stock conc and total reaction volume restrict number of possible conc to make
@@ -17,8 +16,22 @@ def allowed_output(conc_limit, reaction_vol_nl=20000, drop_size_nl=100, verbose=
         print('volumes :', [i * drop_size_nl for i in drop_nums])
         print('possible_concentrations :', calculated_concs)
     else:
-        return calculated_concs
+        return calculated_concs, [i * drop_size_nl for i in drop_nums]
 
+# calc executable percentage
+def percentage_possible(data, threshold=40):
+    lists = list(data.values())
+
+    m = [len(i) for i in data.values()]
+
+    total = np.prod(np.array([len(i) for i in data.values()]))
+    possible = 0
+
+    for items in product(*lists):
+        if sum(items) <= threshold:
+            possible += 1
+    
+    return (possible/total*100)
 
 # Part 5: make a dataframe as a 384 well plate for each metabolite
 def put_volumes_to_384_wells(volumes_array, starting_well='A1', vertical=False, make_csv=False):
