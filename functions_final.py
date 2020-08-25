@@ -427,7 +427,7 @@ def bayesian_optimization(regressors_list,
 
 # transform concentration DataFrame to volume (nanolitre) DataFrame
 def concentration_to_volume(concentrations, concentrations_limits, reaction_mixture_vol_nl=10000,
-                            fixed_parts={'Lysate': 0.33, 'Saline': 0.1}, round_3=True):
+                            fixed_parts={'Lysate': 0.33, 'Saline': 0.1}, round_3=True, automatic = True):
     # concentrations is a Pandas DataFrame in this format:
     #   {'name of metabolite': concentration}
     # concentrations_limits is a Dict in this format:
@@ -439,9 +439,17 @@ def concentration_to_volume(concentrations, concentrations_limits, reaction_mixt
     data_all = data.copy(deep=True)
     data = data[[i for i in data.columns if '_' not in i]]
     data *= reaction_mixture_vol_nl
-
+    
+    stock = 2
+    alternate_1 = 3
+    alternate_2 = 4
+    if not automatic:
+        stock = 1
+        alternate_1 = 2
+        alternate_2 = 3
+    
     for metabolite_name, value in concentrations_limits.items():
-        stock_conc = value[2]
+        stock_conc = value[stock]
         if round_3:
             data[metabolite_name] = round(data[metabolite_name] / stock_conc, 3)
         else:
@@ -464,9 +472,9 @@ def concentration_to_volume(concentrations, concentrations_limits, reaction_mixt
     columns_name = []
     Type_dic = {}
     for key, value in concentrations_limits.items():
-        if len(value) == 3:
+        if len(value) == alternate_1:
             columns_name.append(key)
-        elif len(value) == 4:
+        elif len(value) == alternate_2:
             columns_name.append(key)
             columns_name.append('{}_Type'.format(key))
             Type_dic[key] = []
@@ -474,7 +482,7 @@ def concentration_to_volume(concentrations, concentrations_limits, reaction_mixt
     for key in Type_dic.keys():
         data_type = data_all[[i for i in data_all.columns if '{}_'.format(key) in i]]
         for i in data_type.values:
-            Type_dic[key].append(concentrations_limits[key][3][np.where(i == 1.0)[0][0]])
+            Type_dic[key].append(concentrations_limits[key][alternate_1][np.where(i == 1.0)[0][0]])
 
     Type_list = list(Type_dic.keys())
     for key in Type_list:
