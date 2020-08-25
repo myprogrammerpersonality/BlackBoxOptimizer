@@ -182,11 +182,23 @@ def random_combination_generator(concentrations_limits, number_of_combination=10
                 recalculated_conc = drop_num * value[2] * drop_size_nl / reaction_vol_nl
                 input_data.append(recalculated_conc)
                 input_data += choice_list
+        
+        # Checks
+        index_conc = []
+        num_all = 0
+        for value in concentrations_limits.values():
+            if len(value)==3:
+                index_conc.append(num_all)
+                num_all += 1
+            else:
+                index_conc.append(num_all)
+                num_all += (len(value[3]) + 1)
 
+        input_data_check = [input_data[i] for i in index_conc]
         if check_repeat:
             if input_data not in combinations:
                 if max_nl:
-                    if sum([i * j for i, j in zip(input_data, stocks_vol)]) <= max_nl:
+                    if sum([i * j for i, j in zip(input_data_check, stocks_vol)]) <= max_nl:
                         # appending to other combination
                         combinations.append(input_data)
                         data_point += 1
@@ -195,9 +207,17 @@ def random_combination_generator(concentrations_limits, number_of_combination=10
             else:
                 pass
         else:
-            # appending to other combination
-            combinations.append(input_data)
-            data_point += 1
+            if max_nl:
+                if sum([i * j for i, j in zip(input_data_check, stocks_vol)]) <= max_nl:
+                    # appending to other combination
+                    combinations.append(input_data)
+                    data_point += 1
+                else:
+                    pass
+            else:
+                # appending to other combination
+                combinations.append(input_data)
+                data_point += 1
 
     # make column name:
     columns_name = []
