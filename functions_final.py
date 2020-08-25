@@ -3,21 +3,28 @@ import pandas as pd
 import os
 from itertools import product
 
+
 # calc possible conc
-def allowed_output(conc_limit, reaction_vol_nl=20000, drop_size_nl=100, verbose=0):
+def allowed_output(conc_limit, reaction_vol_nl=20000, drop_size_nl=100, verbose=0, automatic=True):
     # droplet size along with stock conc and total reaction volume restrict number of possible conc to make
     # here we calc all possible conc
 
-    drop_nums = list(range(int((conc_limit[0] * reaction_vol_nl) / (drop_size_nl * conc_limit[2])),
+    if automatic:
+        drop_nums = list(range(int((conc_limit[0] * reaction_vol_nl) / (drop_size_nl * conc_limit[2])),
                            int((conc_limit[1] * reaction_vol_nl) / (drop_size_nl * conc_limit[2])) + 1))
 
-    calculated_concs = [drop_num * conc_limit[2] * drop_size_nl / reaction_vol_nl for drop_num in drop_nums]
+        calculated_concs = [drop_num * conc_limit[2] * drop_size_nl / reaction_vol_nl for drop_num in drop_nums]
+    else:
+        drop_nums = [ i * reaction_vol_nl / (drop_size_nl * conc_limit[1]) for i in conc_limit[0]]
+        calculated_concs = conc_limit[0]
+    
     if verbose:
         print('drops :', drop_nums)
         print('volumes :', [i * drop_size_nl for i in drop_nums])
         print('possible_concentrations :', calculated_concs)
     else:
         return calculated_concs, [i * drop_size_nl for i in drop_nums]
+
 
 # calc executable percentage
 def percentage_possible(data, threshold=40):
