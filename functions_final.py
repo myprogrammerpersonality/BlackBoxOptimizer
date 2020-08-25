@@ -31,7 +31,7 @@ def percentage_possible(data, threshold=40):
         if sum(items) <= threshold:
             possible += 1
     
-    return (possible/total*100)
+    return (possible/total*100), total
 
 # Part 5: make a dataframe as a 384 well plate for each metabolite
 def put_volumes_to_384_wells(volumes_array, starting_well='A1', vertical=False, make_csv=False):
