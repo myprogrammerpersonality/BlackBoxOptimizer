@@ -137,10 +137,10 @@ def source_to_destination(named_volumes, desired_order=None, reset_index=True, c
 
 # find the first uncompleted day
 def day_finder(file, file_format='csv'):
-    for i in range(1, 12):
-        if not os.path.isfile('Day_{}/{}_{}.{}'.format(i, file, i, file_format)):
-            return i
-    return 0
+        i = 1
+        while True:
+            if not os.path.isfile('Day_{}/{}_{}.{}'.format(i, file, i, file_format)):
+                return i
 
 
 # Part 2: define random combination generator function
