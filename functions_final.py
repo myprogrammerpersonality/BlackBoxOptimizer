@@ -141,6 +141,7 @@ def day_finder(file, file_format='csv'):
         while True:
             if not os.path.isfile('Day_{}/{}_{}.{}'.format(i, file, i, file_format)):
                 return i
+            i += 1
 
 
 # Part 2: define random combination generator function
