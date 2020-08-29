@@ -292,7 +292,7 @@ def bayesian_optimization(regressors_list,
     # make random test data
     df_1 = random_combination_generator(concentrations_limits, number_of_combination=pool_size, reaction_vol_nl=reaction_vol_nl,
                                         max_nl=max_nl, drop_size_nl=drop_size_nl, make_csv=False, return_df=True)
-
+    desired_cols = list(df_1.columns)
 
     df_temp = df_1.copy(deep=True)
 
