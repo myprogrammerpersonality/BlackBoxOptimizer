@@ -284,7 +284,7 @@ def bayesian_optimization(regressors_list,
                           data, label,
                           concentrations_limits,
                           final_order,
-                          df_main=aggregated_data_m,
+                          df_main,
                           reaction_vol_nl=20000, max_nl=13200, drop_size_nl=100,
                           exploitation=1, exploration=1, test_size=100, pool_size=100000, verbose=0, day=1,
                           days_range=[20, 20, 20, 20, 20, 20, 20, 20, 20, 20]):
