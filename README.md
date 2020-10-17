@@ -5,7 +5,7 @@
 * Full Performance Can Be Achieved On Google Colab Online
 
 ## Document
-* all functions have document as DocString
+* All functions have document as DocString
 
 ### Support
-* feel free to contact me at: aliyzd1379@gmail.com
+* Feel free to contact me at: aliyzd1379@gmail.com
