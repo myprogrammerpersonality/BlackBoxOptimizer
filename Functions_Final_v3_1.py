@@ -1,3 +1,4 @@
+# import packages
 import numpy as np
 import pandas as pd
 import os
@@ -5,10 +6,22 @@ from itertools import product
 from collections.abc import Iterable
 
 
-# calc possible conc
 def allowed_output(value, reaction_vol_nl=20000, drop_size_nl=100, verbose=0):
-    # droplet size along with stock conc and total reaction volume restrict number of possible conc to make
-    # here we calc all possible conc
+    """Based on high ,low and stock concentrations and droplet size calculate how many combinations is possible
+
+    Parameters
+    ----------
+    value : tuple
+        (low, high, stock concentration)
+
+    Returns
+    -------
+    calculated_concs :
+        a list of possible concentrations
+    
+    calculated_vols :
+        a list of possible volumes
+    """
 
     if value['Conc_Values']:
         if isinstance(value['Conc_Stock'], Iterable):
@@ -32,8 +45,20 @@ def allowed_output(value, reaction_vol_nl=20000, drop_size_nl=100, verbose=0):
         return calculated_concs, [i * drop_size_nl for i in drop_nums]
 
 
-# calc executable percentage
 def percentage_possible(data, threshold=40):
+    """Based on threshold volumes calculate how many combinations of all metabolite is possible to make
+
+    Parameters
+    ----------
+    data : dict
+        {'meatbolite name':[possible volumes], ...}
+        
+    Returns
+    -------
+    percentage possible : float    
+    total : int
+        total number of combination (includes forbiden one)
+    """
     lists = list(data.values())
 
     m = [len(i) for i in data.values()]
@@ -47,8 +72,28 @@ def percentage_possible(data, threshold=40):
     
     return (possible/total*100), total
 
-# find best stock for each concentration
 def find_stock(conc_values, conc_stocks, this_value):
+    """this function find each concentration value belongs to wich stock concentration for metabolites with multiple stocks
+
+    Parameters
+    ----------
+    conc_values : list
+        a list of all possible concentration
+        
+    conc_stocks : list
+        a list of all stocks concentration
+        
+    this_value : float, int
+        concentration value that we find to find it's stock
+        
+    Returns
+    -------
+    i:
+        index of found stock
+        
+    out:
+        value of found stock
+    """
     num = len(conc_stocks)
     avg = len(conc_values) / float(num)
     out = []
@@ -62,14 +107,22 @@ def find_stock(conc_values, conc_stocks, this_value):
         if this_value in value:
             return i, out
 
-# define random combination generator function_v3.0
+# random combination generator function_v3.0
 def random_combination_generator(concentrations_limits, number_of_combination=100, reaction_vol_nl=10000,
                                  max_nl=None, drop_size_nl=100, check_repeat=True, rounded=2, verbose=0, make_csv=False, return_df=False):
-    #  drop size safe
-    #  water <0 safe
-    #  concentrations_limits is a Dict in this format:
-    #  {'name of metabolite': {'Conc_Min': #, 'Conc_Max': #, 'Conc_Values': #, 'Conc_Stock': #, 'Alternatives': #}}
+    """this function make random combination that is safe (e.g. dont make too much or low concentrated, not excecutable based on drop size, not repetitive)
 
+    Parameters
+    ----------
+    concentrations_limits : dict
+        {'name of metabolite': {'Conc_Min': #, 'Conc_Max': #, 'Conc_Values': #, 'Conc_Stock': #, 'Alternatives': #}, ...}
+        
+    Returns
+    -------
+    data : pandas.DataFrame
+        a dataframe as consist of number_of_combination of random combinations
+    """
+    
     # generating random combinations
     combinations = []
     data_point = 0
@@ -178,11 +231,20 @@ def random_combination_generator(concentrations_limits, number_of_combination=10
 # transform concentration DataFrame to volume (nanolitre) DataFrame
 def concentration_to_volume(concentrations, concentrations_limits, reaction_mixture_vol_nl=10000,
                             fixed_parts={'Lysate': 0.33, 'Saline': 0.1}, round_deg=3):
-    # concentrations is a Pandas DataFrame in this format:
-    #   {'name of metabolite': concentration}
-    # concentrations_limits is a Dict in this format:
-    # concentrations_limits (min, max, stock)
-    # caution: concentration unit and metabolite name in concentrations and concentrations_limits must be the same
+    """Transform concentrations dataframe to volumes dataframe
+       option: add a fixed volumes to all combinations like Lysate
+       caution: concentrations unit and metabolite name in concentrations and concentrations_limits must be the same.
+
+    Parameters
+    ----------
+    concentrations : pandas.DataFrame
+        random_combination_generator output
+    
+    Returns
+    -------
+    data : pandas.DataFrame
+        a dataframe same as input in shape but volumes data
+    """
 
     # make a copy of original dataframe to avoid further change than can affect that
     data = concentrations.copy(deep=True)
@@ -246,8 +308,19 @@ def concentration_to_volume(concentrations, concentrations_limits, reaction_mixt
     data_final = pd.concat([data, pd.DataFrame(Type_dic), pd.DataFrame(Stock_dic)], axis=1)
     return data_final[columns_name + list(fixed_parts.keys()) + ['water']]
 
-# find the first uncompleted day
 def day_finder(file, file_format='csv'):
+    """Find the first notcompleted day
+
+    Parameters
+    ----------
+    file : 
+        for now it can only be 'Results'
+        
+    Returns
+    -------
+    i : int
+        the first notcompleted day
+    """
         i = 1
         while True:
             if not os.path.isfile('{}_{}.{}'.format(file, i, file_format)):
@@ -255,8 +328,29 @@ def day_finder(file, file_format='csv'):
             i += 1
 
 
-# result preprocess
 def result_preprocess(day, desired_cols, range=20):
+    """Preprocess Results.csv file to get desired columns and rows
+        caution: the target column name MUST be 'yield'
+        
+    Parameters
+    ----------
+    day : 
+        Results_day.csv
+    
+    desired_cols :
+        name of columns that you want from the results file
+        
+    Returns
+    -------
+    data_m:
+        data in range
+    label_m:
+        label in range
+    data_specials:
+        other data
+    label_specials:
+        other label
+    """
     results = pd.read_csv('Results_{}.csv'.format(day, day))
 
     # m number pipeline
@@ -270,8 +364,23 @@ def result_preprocess(day, desired_cols, range=20):
     return data_m, label_m, data_specials, label_specials
 
 
-# check to avoid repetitive combinations
 def check_repetitive(combination, df_main):
+    """Check to avoid repetitive combinations
+        
+    Parameters
+    ----------
+    combination : 
+        combinations that want to be checked
+    
+    df_main : pandas.DataFrame
+        source dataframe
+        
+    Returns
+    -------
+    boolean:
+        True: it exist in df_main
+        False: it's not
+    """
     comparison_df = df_main.merge(combination, indicator=True, how='outer')
     if 'both' in comparison_df._merge.unique():
         return False
@@ -279,7 +388,6 @@ def check_repetitive(combination, df_main):
         return True
 
 
-# main bayesian optimization function
 def bayesian_optimization(regressors_list,
                           data, label,
                           concentrations_limits,
@@ -288,6 +396,37 @@ def bayesian_optimization(regressors_list,
                           reaction_vol_nl=20000, max_nl=13200, drop_size_nl=100,
                           exploitation=1, exploration=1, test_size=100, pool_size=100000, verbose=0, day=1,
                           days_range=[20, 20, 20, 20, 20, 20, 20, 20, 20, 20]):
+    """Main bayesian optimization function
+        
+    Parameters
+    ----------
+    regressors_list : 
+        a list consists of more than one regressor that has .fit and .predict feature
+    
+    data : pandas.DataFrame
+        all previous day data
+
+    label : pandas.DataFrame
+        all previous day label
+        
+    exploitation : 1
+        coeficient of focus on higher yield query
+    
+    exploration : 1
+        coefficient of focus on more informative query
+        
+    test_size : 100
+        output combinations number
+        
+    pool_size : 100000
+        how many random combinations to ask from regressor list each round
+        caution: this parameter highly affect executions time
+        
+    Returns
+    -------
+    chosen_combinations: pandas.DataFrame
+        combinations that expected to improve yield
+    """
     # first fit training data on our models
     for regressor in regressors_list:
         regressor.fit(data.values, label.values)
@@ -324,15 +463,29 @@ def bayesian_optimization(regressors_list,
     return chosen_combinations[final_order]
 
 # ECHO functions
-# Part 5: make a dataframe as a 384 well plate for each metabolite
 def put_volumes_to_384_wells(volumes_array, starting_well='A1', vertical=False, make_csv=False):
-    # vertical and horizontal filling
-    # volumes array is concentration_to_volume output
-    # volumes array format:
-    # a dataframe with columns are component, each row vol of that components
-    # this function will output 
-    # a list consists of one dataframe for each of metabolite that shows appropriate 384 well plate
-    # and one separate dataframe that add well name to volume dataframe 
+    """Make a dataframe as a 384 well plate for each metabolite
+        
+    Parameters
+    ----------
+    volumes_array : 
+        a dataframe with columns are component, each row vol of that components (e.g. volumes.csv) 
+        
+    starting_well : 'A1'
+        name of the well in 384 well plate that you want to start filling
+    
+    vertical:
+        if True it will fill the plate column by column top down
+        if False it will fill the plate row by row left to right
+        
+    Returns
+    -------
+    all_dataframe:
+        a list consists of one dataframe for each of metabolite that shows appropriate 384 well plate
+        
+    named_volumes:
+        one separate dataframe that add well name to volume dataframe
+    """
     if len(volumes_array) > 384: raise ValueError
 
     all_dataframe = {}
@@ -387,10 +540,21 @@ def put_volumes_to_384_wells(volumes_array, starting_well='A1', vertical=False, 
 
 # make source to destination dataframe for ECHO machine
 def source_to_destination(named_volumes, desired_order=None, reset_index=True, check_zero=False):
-    # named_volume is second output of put_volumes_to_384_wells function
-
-    # make a separate dataframe for each metabolite that appended in a dict
-    # further can be aggregated to one csv file by your desired order
+    """Make a dataframe as a 384 well plate for each metabolite
+        
+    Parameters
+    ----------
+    named_volume : 
+         second output of put_volumes_to_384_wells function
+        
+    Returns
+    -------
+    all_sources:
+        separate dataframe for each metabolite that appended in a dict
+    
+    aggregated:
+        aggregated all_sources to one csv file by your desired order
+    """
     all_sources = {}
     for metabolite_name in named_volumes.drop(columns=['well_name']):
         transfers = {'Source_Plate_Barcode': [], 'Source_Well': [], 'Destination_Plate_Barcode': [],
