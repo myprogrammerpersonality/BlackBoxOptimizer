@@ -321,11 +321,11 @@ def day_finder(file, file_format='csv'):
     i : int
         the first notcompleted day
     """
-        i = 1
-        while True:
-            if not os.path.isfile('{}_{}.{}'.format(file, i, file_format)):
-                return i
-            i += 1
+    i = 1
+    while True:
+        if not os.path.isfile('{}_{}.{}'.format(file, i, file_format)):
+            return i
+        i += 1
 
 
 def result_preprocess(day, desired_cols, range=20):
