@@ -57,7 +57,7 @@ def percentage_possible(data, threshold=40):
     -------
     percentage possible : float    
     total : int
-        total number of combination (includes forbiden one)
+        total number of combination (includes forbidden one)
     """
     lists = list(data.values())
 
