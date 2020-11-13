@@ -7,7 +7,7 @@
 ** Click on "Open in Colab"
 
 ## Document
-* All functions have document as DocString
+* All functions have Help as DocString (i.e. Help(Name of Function))
 
 ### Support
 * Feel free to contact me at: aliyzd1379@gmail.com
