@@ -257,7 +257,7 @@ def concentration_to_volume(concentrations, concentrations_limits, reaction_mixt
             print()
             data[metabolite_name] = [round(data[metabolite_name][i] / value['Conc_Stock'][find_stock(value['Conc_Values'], value['Conc_Stock'], data_all[metabolite_name][i])[0]], round_deg) for i in range(len(data[metabolite_name]))]
         else:
-            data[metabolite_name] /= value['Conc_Stock']
+            data[metabolite_name] = [round(data[metabolite_name][i] / value['Conc_Stock'], round_deg) for i in range(len(data[metabolite_name]))]
 
     # add fix parts
     if fixed_parts:
