@@ -230,7 +230,7 @@ def random_combination_generator(concentrations_limits, number_of_combination=10
 
 # transform concentration DataFrame to volume (nanolitre) DataFrame
 def concentration_to_volume(concentrations, concentrations_limits, reaction_mixture_vol_nl=10000,
-                            fixed_parts={'Lysate': 0.33, 'Saline': 0.1}, round_deg=3, check_water=True):
+                            fixed_parts={'Lysate': 0.33, 'Saline': 0.1}, round_deg=1, check_water=True):
     """Transform concentrations dataframe to volumes dataframe
        option: add a fixed volumes to all combinations like Lysate
        caution: concentrations unit and metabolite name in concentrations and concentrations_limits must be the same.
@@ -269,7 +269,7 @@ def concentration_to_volume(concentrations, concentrations_limits, reaction_mixt
 
     # for low stock concentration that is not possible to make, raise an error
     # stock conc should set in a way that dont raise this error to avoid further debugging
-    if check_water and not all(data['water'] > 0): raise Exception("Oops, too concentrated combination!")
+    if check_water and not all(data['water'] >= 0): raise Exception("Oops, too concentrated combination!")
 
     # add alternative
     # make columns name list:
